@@ -1,0 +1,28 @@
+{
+  "name": "plaid-mcp-server",
+  "version": "1.0.0",
+  "description": "Plaid MCP Server with HTTP and stdio interfaces",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc server.ts --module commonjs --target ES2020 --moduleResolution node --esModuleInterop --skipLibCheck && tsc http-server.ts --module commonjs --target ES2020 --moduleResolution node --esModuleInterop --skipLibCheck",
+    "start:mcp": "node server.js",
+    "start:http": "node http-server.js",
+    "dev:http": "ts-node http-server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.69.0",
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.10.1",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "plaid": "^39.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
