@@ -1059,8 +1059,7 @@ const rootMetadataHandler = (req: Request, res: Response) => {
     transport: "sse",
     endpoints: {
       sse: `${baseUrl}/sse`,
-      health: `${baseUrl}/health`,
-      logo: `${baseUrl}/logo.svg`
+      health: `${baseUrl}/health`
     },
     authentication: OAUTH_ENABLED ? {
       type: "oauth2.1",
@@ -1092,7 +1091,6 @@ app.get("/health", (req: Request, res: Response) => {
     server: "plaid-mcp-sse-server",
     name: "Plaid Banking",
     version: "1.0.0",
-    logo: "/logo.svg",
     authentication: REQUIRE_AUTH ? (OAUTH_ENABLED ? "oauth2.1" : "bearer") : "disabled",
     endpoints: {
       sse: "/sse",
@@ -1108,24 +1106,7 @@ app.get("/health", (req: Request, res: Response) => {
   });
 });
 
-// Logo endpoint (public)
-app.get("/logo.svg", (req: Request, res: Response) => {
-  const logoPath = path.join(__dirname, "logo.svg");
-  res.setHeader('Content-Type', 'image/svg+xml');
-  if (fs.existsSync(logoPath)) {
-    res.sendFile(logoPath);
-  } else {
-    // Fallback: send inline SVG
-    res.send(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="15" fill="#1E3A8A"/>
-  <path d="M30 40 L50 25 L70 40 L70 75 L30 75 Z" fill="#60A5FA" stroke="#3B82F6" stroke-width="2"/>
-  <circle cx="40" cy="55" r="3" fill="#FCD34D"/>
-  <circle cx="50" cy="55" r="3" fill="#FCD34D"/>
-  <circle cx="60" cy="55" r="3" fill="#FCD34D"/>
-  <text x="50" y="92" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#BFDBFE" text-anchor="middle">PLAID</text>
-</svg>`);
-  }
-});
+// Logo/Favicon endpoints removed - return 404 for all logo/favicon requests
 
 // ============================================================================
 // OAuth 2.1 Endpoints (Dynamic Client Registration + Authorization Code + PKCE)
@@ -1482,7 +1463,6 @@ function requireAuth(req: any, res: any, next: any) {
   // Skip auth for public endpoints
   const publicPaths = [
     "/health",
-    "/logo.svg",
     "/oauth/token",
     "/"
   ];
