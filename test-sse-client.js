@@ -62,7 +62,7 @@ const AUTH_TOKEN = process.env.MCP_AUTH_TOKEN;
 console.log(`Testing MCP SSE Server at: ${SERVER_URL}\n`);
 
 if (OAUTH_CLIENT_ID && OAUTH_CLIENT_SECRET) {
-  console.log(`🔐 Using OAuth 2.0 authentication (Client ID: ${OAUTH_CLIENT_ID})\n`);
+  console.log(`🔐 Using OAuth 2.1 authentication (Client ID: ${OAUTH_CLIENT_ID})\n`);
 } else if (AUTH_TOKEN) {
   console.log(`🔐 Using Bearer token authentication\n`);
 } else {

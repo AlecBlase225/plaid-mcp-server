@@ -42,7 +42,7 @@ Expected output (with OAuth):
 ```
 Testing MCP SSE Server at: http://localhost:3001
 
-🔐 Using OAuth 2.0 authentication (Client ID: f14a6478125f6698)
+🔐 Using OAuth 2.1 authentication
 
 Step 0: Obtaining OAuth access token...
 ✓ OAuth token obtained
@@ -86,7 +86,7 @@ ngrok http 3001
 3. **OAuth Client Secret:** Get from `.env.local` → `MCP_OAUTH_CLIENT_SECRET`
 4. **Token URL:** `https://abc123.ngrok.io/oauth/token`
 
-> 🔒 **OAuth 2.0:** Recommended authentication method for ChatGPT  
+> 🔒 **OAuth 2.1:** Recommended authentication method for ChatGPT  
 > See [CHATGPT-SETUP.md](./CHATGPT-SETUP.md) for complete guide
 
 ### Option B: Production Deployment
