@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import express from "express";
+import express, { Request, Response } from "express";
 
 // Load environment variables from .env.local
 dotenv.config({ path: ".env.local" });
@@ -949,7 +949,7 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================================================
 
 // OAuth 2.1 Discovery Endpoints (must be public for ChatGPT)
-const oauthDiscoveryHandler = (req, res) => {
+const oauthDiscoveryHandler = (req: Request, res: Response) => {
   if (!OAUTH_ENABLED) {
     return res.status(404).json({ error: "OAuth not configured" });
   }
@@ -979,7 +979,7 @@ app.get("/sse/.well-known/oauth-authorization-server", oauthDiscoveryHandler);
 app.get("/.well-known/oauth-authorization-server/sse", oauthDiscoveryHandler);
 
 // OpenID Configuration (ChatGPT looks for this)
-const openidConfigHandler = (req, res) => {
+const openidConfigHandler = (req: Request, res: Response) => {
   if (!OAUTH_ENABLED) {
     return res.status(404).json({ error: "OAuth not configured" });
   }
@@ -1005,7 +1005,7 @@ app.get("/sse/.well-known/openid-configuration", openidConfigHandler);
 app.get("/.well-known/openid-configuration/sse", openidConfigHandler);
 
 // OAuth Protected Resource (RFC 8705)
-const oauthProtectedResourceHandler = (req, res) => {
+const oauthProtectedResourceHandler = (req: Request, res: Response) => {
   if (!OAUTH_ENABLED) {
     return res.status(404).json({ error: "OAuth not configured" });
   }
@@ -1026,7 +1026,7 @@ app.get("/.well-known/oauth-protected-resource", oauthProtectedResourceHandler);
 app.get("/.well-known/oauth-protected-resource/sse", oauthProtectedResourceHandler);
 
 // MCP configuration endpoint (for ChatGPT MCP discovery)
-app.get("/.well-known/mcp", (req, res) => {
+app.get("/.well-known/mcp", (req: Request, res: Response) => {
   // Use X-Forwarded-Proto for proxied requests (ngrok, etc.)
   const protocol = req.get('x-forwarded-proto') || req.protocol;
   const baseUrl = `${protocol}://${req.get('host')}`;
@@ -1047,7 +1047,7 @@ app.get("/.well-known/mcp", (req, res) => {
 });
 
 // MCP metadata endpoint (what ChatGPT checks first)
-const rootMetadataHandler = (req, res) => {
+const rootMetadataHandler = (req: Request, res: Response) => {
   // Use X-Forwarded-Proto for proxied requests (ngrok, etc.)
   const protocol = req.get('x-forwarded-proto') || req.protocol;
   const baseUrl = `${protocol}://${req.get('host')}`;
@@ -1082,7 +1082,7 @@ app.get("/", rootMetadataHandler);
 app.post("/", rootMetadataHandler);
 
 // Health check endpoint (public)
-app.get("/health", (req, res) => {
+app.get("/health", (req: Request, res: Response) => {
   // Use X-Forwarded-Proto for proxied requests (ngrok, etc.)
   const protocol = req.get('x-forwarded-proto') || req.protocol;
   const baseUrl = `${protocol}://${req.get('host')}`;
@@ -1109,7 +1109,7 @@ app.get("/health", (req, res) => {
 });
 
 // Logo endpoint (public)
-app.get("/logo.svg", (req, res) => {
+app.get("/logo.svg", (req: Request, res: Response) => {
   const logoPath = path.join(__dirname, "logo.svg");
   res.setHeader('Content-Type', 'image/svg+xml');
   if (fs.existsSync(logoPath)) {
@@ -1132,7 +1132,7 @@ app.get("/logo.svg", (req, res) => {
 // ============================================================================
 
 // 1. Dynamic Client Registration (RFC 7591)
-app.post("/oauth/register", (req, res) => {
+app.post("/oauth/register", (req: Request, res: Response) => {
   const { redirect_uris, grant_types, response_types, token_endpoint_auth_method } = req.body;
 
   console.log(`📝 OAuth client registration request`);
@@ -1183,7 +1183,7 @@ app.post("/oauth/register", (req, res) => {
 });
 
 // 2. Authorization Endpoint (with user consent UI)
-app.get("/oauth/authorize", (req, res) => {
+app.get("/oauth/authorize", (req: Request, res: Response) => {
   const {
     client_id,
     redirect_uri,
@@ -1320,7 +1320,7 @@ app.get("/oauth/authorize", (req, res) => {
 });
 
 // Handle authorization form submission
-app.post("/oauth/authorize", express.urlencoded({ extended: true }), (req, res) => {
+app.post("/oauth/authorize", express.urlencoded({ extended: true }), (req: Request, res: Response) => {
   const {
     client_id,
     redirect_uri,
@@ -1360,7 +1360,7 @@ app.post("/oauth/authorize", express.urlencoded({ extended: true }), (req, res) 
 });
 
 // 3. Token Endpoint (exchange authorization code for access token)
-app.post("/oauth/token", (req, res) => {
+app.post("/oauth/token", (req: Request, res: Response) => {
   const {
     grant_type,
     code,
@@ -1460,7 +1460,7 @@ app.post("/oauth/token", (req, res) => {
 });
 
 // 4. Token Revocation Endpoint (optional but recommended)
-app.post("/oauth/revoke", (req, res) => {
+app.post("/oauth/revoke", (req: Request, res: Response) => {
   const { token } = req.body;
 
   if (token && issuedTokens.has(token)) {
@@ -1641,7 +1641,7 @@ function requireAuth(req: any, res: any, next: any) {
 app.use(requireAuth);
 
 // SSE endpoint for MCP - handle both GET (SSE connection) and POST (messages)
-app.get("/sse", async (req, res) => {
+app.get("/sse", async (req: Request, res: Response) => {
   const sessionId = req.query.sessionId as string || `session-${Date.now()}`;
   console.log(`New SSE connection established from: ${req.ip} (session: ${sessionId})`);
 
@@ -1673,7 +1673,7 @@ app.get("/sse", async (req, res) => {
 });
 
 // Message endpoint for MCP client messages
-const messageHandler = async (req, res) => {
+const messageHandler = async (req: Request, res: Response) => {
   const sessionIdFromQuery = req.query.sessionId as string;
   console.log(`Received message (sessionId: ${sessionIdFromQuery || 'none'}):`, req.body);
   

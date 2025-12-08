@@ -88,20 +88,7 @@ Once connected, try asking ChatGPT:
 - "Get my transactions from last month"
 - "Create a link token to connect my bank"
 
-### Full Tool List
-
-1. **create_link_token** - Start bank connection flow
-2. **exchange_public_token** - Save connected bank
-3. **list_items** - List all connected banks
-4. **get_accounts** - View account details
-5. **get_balances** - Check current balances
-6. **get_transactions** - Retrieve transactions (with account filtering)
-7. **get_recurring_transactions** - Find subscriptions
-8. **enrich_transactions** - Get merchant details
-9. **get_investment_holdings** - View investment accounts
-10. **refresh_statements** - Update available statements
-11. **list_statements** - Show statement history
-12. **download_statement** - Get statement PDFs
+See [README.md](./README.md#available-mcp-tools) for the complete tool list.
 
 ## How It Works
 
@@ -145,7 +132,7 @@ curl https://YOUR-NGROK-URL/.well-known/oauth-authorization-server
 **Problem:** Redirect back to ChatGPT fails
 
 **Solution:**
-1. Check server logs for errors: `tail -50 /tmp/sse-server.log`
+1. Check server logs for errors
 2. Verify ngrok is still running
 3. Try deleting and re-adding the connector in ChatGPT
 
@@ -164,7 +151,7 @@ curl https://YOUR-NGROK-URL/.well-known/oauth-authorization-server
 **Problem:** ChatGPT shows "Connected" but no tools
 
 **Solution:**
-1. Check server logs for SSE connection: `grep "SSE connection" /tmp/sse-server.log`
+1. Check server logs for SSE connection
 2. Try asking ChatGPT: "What MCP tools do you have access to?"
 3. Refresh ChatGPT page
 

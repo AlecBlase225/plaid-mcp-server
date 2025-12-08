@@ -101,8 +101,8 @@ Shows current authentication mode: `oauth2.1`, `bearer`, or `disabled`.
 ## Troubleshooting
 
 ### "Authorization header required"
-- **OAuth:** Complete authorization flow in browser
-- **Bearer:** Include `Authorization: Bearer TOKEN` header
+- **OAuth:** Complete authorization flow in browser (see [CHATGPT-SETUP.md](./CHATGPT-SETUP.md))
+- **Bearer:** Include `Authorization: Bearer TOKEN` header in requests
 
 ### "Invalid client_id"
 - Check `MCP_OAUTH_CLIENT_ID` matches in `.env.local` and ChatGPT
