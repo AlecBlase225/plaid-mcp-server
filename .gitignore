@@ -1,3 +1,8 @@
 node_modules
 .env
 .env.local
+
+# Compiled TypeScript files
+server.js
+http-server.js
+sse-server.js

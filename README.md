@@ -1,6 +1,15 @@
 # Plaid MCP Server
 
-A Model Context Protocol (MCP) server and HTTP API for integrating Plaid banking services. This server provides both a web interface for connecting bank accounts and an MCP interface for use with Claude and other MCP clients.
+A Model Context Protocol (MCP) server and HTTP API for integrating Plaid banking services. This server provides three interfaces:
+- 🌐 **HTTP/REST API** with web interface for connecting bank accounts
+- 🤖 **MCP Server (stdio)** for Claude Desktop (local)
+- 🌍 **MCP Server (SSE)** for ChatGPT and remote clients
+
+## Quick Links
+
+- **[ChatGPT Setup](./CHATGPT-SETUP.md)** 🤖 - Connect to ChatGPT (5 minutes)
+- **[Authentication](./AUTHENTICATION.md)** 🔐 - OAuth 2.1, Bearer Token, Test Mode
+- **[Deployment Guide](./DEPLOYMENT.md)** 🚀 - Production deployment
 
 ## Features
 
@@ -20,71 +29,114 @@ A Model Context Protocol (MCP) server and HTTP API for integrating Plaid banking
 
 ## Installation
 
-1. **Clone or navigate to the repository:**
-   ```bash
-   cd <path-to-plaid-mcp-server>
-   ```
+```bash
+# Install dependencies
+npm install
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+# Create .env.local with your Plaid credentials
+cat > .env.local << EOF
+PLAID_CLIENT_ID=your_client_id_here
+PLAID_SECRET=your_secret_here
+PLAID_ENV=sandbox
 
-3. **Create a `.env` file** in the project root with your Plaid credentials:
-   ```env
-   PLAID_CLIENT_ID=your_client_id_here
-   PLAID_SECRET=your_secret_here
-   PLAID_ENV=sandbox
-   PORT=3000
-   ```
+# OAuth 2.1 (for ChatGPT) - auto-generate secure credentials
+MCP_OAUTH_CLIENT_ID=$(openssl rand -hex 8)
+MCP_OAUTH_CLIENT_SECRET=$(openssl rand -hex 16)
+EOF
 
-   Environment variables:
-   - `PLAID_CLIENT_ID`: Your Plaid client ID
-   - `PLAID_SECRET`: Your Plaid secret key
-   - `PLAID_ENV`: Environment (`sandbox`, `development`, or `production`)
-   - `PORT`: HTTP server port (default: 3000)
+# Build
+npm run build
+```
 
-4. **Build the project:**
+**Get Plaid credentials:** [dashboard.plaid.com/signup](https://dashboard.plaid.com/signup) (free sandbox available)
+
+## Running the Server
+
+### For ChatGPT (Remote - SSE)
+
+```bash
+npm run start:sse  # Runs on http://localhost:3001
+
+# Test it (starts a test server in test mode)
+npm run test
+```
+
+**Note:** Testing starts a temporary server with authentication bypassed (`MCP_TEST_MODE=true`). Your production server on port 3001 will be temporarily stopped during testing and needs to be restarted afterward.
+
+### For Claude Desktop (Local - stdio)
+
+```bash
+npm run start:mcp
+```
+
+Then add to `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "plaid": {
+      "command": "node",
+      "args": ["/absolute/path/to/server.js"],
+      "env": {
+        "PLAID_CLIENT_ID": "xxx",
+        "PLAID_SECRET": "xxx",
+        "PLAID_ENV": "sandbox"
+      }
+    }
+  }
+}
+```
+
+### Web Interface (HTTP Server)
+
+```bash
+npm run start:http  # Runs on http://localhost:3000
+open http://localhost:3000/index.html
+```
+
+## Configuring ChatGPT (Remote MCP Server)
+
+### Prerequisites
+- ChatGPT Plus or Pro subscription
+- ngrok or similar tunneling service (for remote access)
+- OAuth credentials from `.env.local`
+
+### Setup Steps
+
+1. **Start the SSE server:**
    ```bash
    npm run build
+   npm run start:sse
    ```
-   
-   Or compile manually using:
+
+2. **Expose via ngrok (required for ChatGPT):**
    ```bash
-   npx tsc server.ts --lib es2020 --target es2020 --module commonjs --moduleResolution node --outDir . --declaration false --esModuleInterop true --skipLibCheck true
+   ngrok http 3001
    ```
+   This gives you an HTTPS URL like: `https://abc123.ngrok-free.dev`
 
-## Running the Application
+3. **Get your OAuth credentials from `.env.local`:**
+   ```bash
+   grep MCP_OAUTH .env.local
+   ```
+   You'll need the `MCP_OAUTH_CLIENT_ID` and `MCP_OAUTH_CLIENT_SECRET`
 
-### Option 1: HTTP Server (Web Interface)
+4. **Add to ChatGPT:**
+   - Go to ChatGPT → Settings → Connectors
+   - Click "Add Connector"
+   - **URL:** `https://your-ngrok-url.ngrok-free.dev` (without `/sse`)
+   - Select **OAuth** authentication
+   - **Client ID:** Your `MCP_OAUTH_CLIENT_ID`
+   - **Client Secret:** Your `MCP_OAUTH_CLIENT_SECRET`
+   - Click "Create"
 
-Run the HTTP server to use the web interface:
+5. **Authorize access:**
+   - A browser window will open with an authorization consent screen
+   - Review the permissions and click "Authorize"
+   - ChatGPT will complete the connection
 
-```bash
-npm start:http
-```
+You should now see your Plaid MCP server connected in ChatGPT!
 
-Then open your browser to:
-```
-http://localhost:3000/index.html
-```
-
-**Development mode** (with auto-reload using ts-node):
-```bash
-npm run dev:http
-```
-
-### Option 2: MCP Server (for Claude/MCP Clients)
-
-Run the MCP server for integration with Claude or other MCP clients:
-
-```bash
-npm start:mcp
-```
-
-This runs the server in stdio mode for MCP protocol communication.
-
-## Configuring Claude Desktop
+## Configuring Claude Desktop (Local MCP Server)
 
 To use this MCP server with Claude Desktop, you need to add it to Claude's configuration file.
 
@@ -244,8 +296,10 @@ The file is automatically created with restricted permissions (600) and contains
 
 ```
 plaid-mcp-server/
-├── server.ts           # MCP server (stdio transport)
+├── server.ts           # MCP server (stdio transport for Claude Desktop)
 ├── server.js           # Compiled MCP server
+├── sse-server.ts       # MCP SSE server (HTTP transport for ChatGPT)
+├── sse-server.js       # Compiled SSE server
 ├── http-server.ts      # HTTP server with REST API
 ├── http-server.js      # Compiled HTTP server
 ├── index.html          # Web interface
@@ -257,9 +311,12 @@ plaid-mcp-server/
 ## Scripts
 
 - `npm run build` - Compile TypeScript files
-- `npm start:http` - Start HTTP server (production)
-- `npm start:mcp` - Start MCP server (production)
+- `npm run test` - Test the SSE server (exits cleanly with pass/fail)
+- `npm run start:http` - Start HTTP server (production)
+- `npm run start:mcp` - Start MCP server for Claude Desktop (production)
+- `npm run start:sse` - Start SSE server for ChatGPT (production)
 - `npm run dev:http` - Start HTTP server (development mode)
+- `npm run dev:sse` - Start SSE server (development mode)
 
 ## Security Notes
 

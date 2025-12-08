@@ -162,7 +162,8 @@ async function getTransactions(
   itemId: string,
   startDate: string,
   endDate: string,
-  limit?: number
+  limit?: number,
+  accountIds?: string[]
 ): Promise<object> {
   const accessToken = getToken(itemId);
   if (!accessToken) {
@@ -175,6 +176,7 @@ async function getTransactions(
     end_date: endDate,
     options: {
       count: limit || 100,
+      account_ids: accountIds,
     },
   });
 
@@ -528,6 +530,7 @@ server.registerTool(
       start_date: z.string().describe("Start date in YYYY-MM-DD format"),
       end_date: z.string().describe("End date in YYYY-MM-DD format"),
       limit: z.number().optional().describe("Maximum number of transactions to return (default: 100)"),
+      account_ids: z.array(z.string()).optional().describe("Optional array of account IDs to filter transactions for specific accounts"),
     }),
   },
   async (args) => {
@@ -536,7 +539,8 @@ server.registerTool(
         args.item_id,
         args.start_date,
         args.end_date,
-        args.limit
+        args.limit,
+        args.account_ids
       );
       return {
         content: [

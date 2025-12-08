@@ -4,11 +4,14 @@
   "description": "Plaid MCP Server with HTTP and stdio interfaces",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc server.ts --module commonjs --target ES2020 --moduleResolution node --esModuleInterop --skipLibCheck && tsc http-server.ts --module commonjs --target ES2020 --moduleResolution node --esModuleInterop --skipLibCheck",
+    "test": "MCP_TEST_MODE=true node test-sse-client.js",
+    "build": "tsc server.ts --module commonjs --target ES2020 --moduleResolution node --esModuleInterop --skipLibCheck && tsc http-server.ts --module commonjs --target ES2020 --moduleResolution node --esModuleInterop --skipLibCheck && tsc sse-server.ts --module commonjs --target ES2020 --moduleResolution node --esModuleInterop --skipLibCheck",
     "start:mcp": "node server.js",
     "start:http": "node http-server.js",
-    "dev:http": "ts-node http-server.ts"
+    "start:sse": "node sse-server.js",
+    "start:sse:test": "MCP_TEST_MODE=true node sse-server.js",
+    "dev:http": "ts-node http-server.ts",
+    "dev:sse": "ts-node sse-server.ts"
   },
   "keywords": [],
   "author": "",

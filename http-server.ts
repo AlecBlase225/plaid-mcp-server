@@ -164,7 +164,8 @@ async function getTransactions(
   itemId: string,
   startDate: string,
   endDate: string,
-  limit?: number
+  limit?: number,
+  accountIds?: string[]
 ): Promise<object> {
   const accessToken = getToken(itemId);
   if (!accessToken) {
@@ -177,6 +178,7 @@ async function getTransactions(
     end_date: endDate,
     options: {
       count: limit || 100,
+      account_ids: accountIds,
     },
   });
 
@@ -410,7 +412,7 @@ app.get("/api/balances/:itemId", async (req, res) => {
 
 app.get("/api/transactions/:itemId", async (req, res) => {
   try {
-    const { start_date, end_date, limit } = req.query;
+    const { start_date, end_date, limit, account_ids } = req.query;
 
     if (!start_date || !end_date) {
       return res.status(400).json({
@@ -419,11 +421,16 @@ app.get("/api/transactions/:itemId", async (req, res) => {
       });
     }
 
+    const accountIdsArray = account_ids 
+      ? (typeof account_ids === 'string' ? account_ids.split(',') : account_ids as string[])
+      : undefined;
+
     const transactions = await getTransactions(
       req.params.itemId,
       start_date as string,
       end_date as string,
-      limit ? parseInt(limit as string) : undefined
+      limit ? parseInt(limit as string) : undefined,
+      accountIdsArray
     );
     res.json({ success: true, ...transactions });
   } catch (error) {
