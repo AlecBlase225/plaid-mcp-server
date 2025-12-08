@@ -107,7 +107,7 @@ async function createLinkToken(): Promise<string> {
     user: { client_user_id: `user-${Date.now()}` },
     client_name: "Claude Plaid Integration",
     language: "en",
-    products: [Products.Auth, Products.Statements, Products.Transactions, Products.Investments],
+    products: [Products.Transactions],
     country_codes: [CountryCode.Us],
   });
   return response.data.link_token;
@@ -378,13 +378,31 @@ server.registerTool(
           },
         ],
       };
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
+    } catch (error: any) {
+      // Capture full Plaid API error details
+      let errorMsg = error instanceof Error ? error.message : String(error);
+      let errorDetails: any = {};
+      
+      if (error.response?.data) {
+        errorDetails = error.response.data;
+        errorMsg = JSON.stringify(error.response.data, null, 2);
+      }
+      
+      console.error("Full error details:", error);
+      console.error("Error response:", error.response?.data);
+      
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify({ success: false, error: errorMsg }),
+            text: JSON.stringify({ 
+              success: false, 
+              error: errorMsg,
+              details: errorDetails,
+              env: ENV,
+              has_client_id: !!CLIENT_ID,
+              has_secret: !!SECRET
+            }, null, 2),
           },
         ],
       };

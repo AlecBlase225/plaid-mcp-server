@@ -109,7 +109,7 @@ async function createLinkToken(): Promise<string> {
     user: { client_user_id: `user-${Date.now()}` },
     client_name: "Claude Plaid Integration",
     language: "en",
-    products: [Products.Auth, Products.Statements, Products.Transactions, Products.Investments],
+    products: [Products.Transactions],
     country_codes: [CountryCode.Us],
   });
   return response.data.link_token;
