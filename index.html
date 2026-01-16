@@ -155,6 +155,30 @@
         .refresh-btn:hover {
             background: #5a6268;
         }
+        .reconnect-btn {
+            background: #ffc107;
+            color: #212529;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+        .reconnect-btn:hover {
+            background: #e0a800;
+        }
+        .delete-btn {
+            background: #dc3545;
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        .account-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -227,6 +251,10 @@
                                     <span style="margin-left: 10px;">Connected: ${new Date(item.storedAt).toLocaleString()}</span>
                                 </div>
                             </div>
+                            <div class="account-actions">
+                                <button class="reconnect-btn" onclick="reconnectAccount('${item.itemId}', '${item.institution || 'Unknown Institution'}')" title="Reconnect account">🔗 Reconnect</button>
+                                <button class="delete-btn" onclick="confirmRemoveAccount('${item.itemId}', '${item.institution || 'Unknown Institution'}')" title="Remove account">🗑</button>
+                            </div>
                         </div>
                     `).join('');
                 } else {
@@ -234,6 +262,80 @@
                 }
             } catch (error) {
                 accountsList.innerHTML = '<div class="no-accounts" style="color: #d9534f;">Error loading accounts: ' + error.message + '</div>';
+            }
+        }
+
+        // Reconnect an existing account using Plaid update mode
+        async function reconnectAccount(itemId, institutionName) {
+            try {
+                // Create a link token for update mode
+                const response = await fetch(`/api/create_link_token_for_update/${itemId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    // Handle stale items that no longer exist on Plaid
+                    if (data.error_code === 'ITEM_NOT_FOUND') {
+                        if (confirm(`${institutionName} is no longer connected to Plaid. Would you like to remove it from the list?`)) {
+                            await removeAccount(itemId, institutionName);
+                        }
+                        return;
+                    }
+                    throw new Error(data.error || 'Failed to create update link token');
+                }
+
+                // Launch Plaid Link in update mode
+                const handler = Plaid.create({
+                    token: data.link_token,
+                    onSuccess: function(public_token, metadata) {
+                        alert(`Successfully reconnected ${institutionName}!`);
+                        loadConnectedAccounts();
+                    },
+                    onExit: function(err, metadata) {
+                        if (err != null) {
+                            alert('Error reconnecting: ' + err.display_message);
+                        }
+                    },
+                    onEvent: function(eventName, metadata) {
+                        console.log('Reconnect Event:', eventName, metadata);
+                    }
+                });
+
+                handler.open();
+            } catch (error) {
+                alert('Error starting reconnect: ' + error.message);
+            }
+        }
+
+        // Remove an account from local storage
+        async function removeAccount(itemId, institutionName) {
+            try {
+                const response = await fetch(`/api/items/${itemId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`${institutionName} has been removed.`);
+                    loadConnectedAccounts();
+                } else {
+                    throw new Error(data.error || 'Failed to remove account');
+                }
+            } catch (error) {
+                alert('Error removing account: ' + error.message);
+            }
+        }
+
+        // Confirm before removing an account
+        function confirmRemoveAccount(itemId, institutionName) {
+            if (confirm(`Are you sure you want to remove ${institutionName}?`)) {
+                removeAccount(itemId, institutionName);
             }
         }
 

@@ -115,6 +115,29 @@ async function createLinkToken(): Promise<string> {
   return response.data.link_token;
 }
 
+async function createLinkTokenForUpdate(itemId: string): Promise<string> {
+  const accessToken = getToken(itemId);
+  if (!accessToken) {
+    throw new Error(`No access token found for item ${itemId}`);
+  }
+
+  // Get stored item info to use consistent user ID
+  const tokens = loadTokens();
+  const storedItem = tokens[itemId];
+
+  const response = await plaidClient.linkTokenCreate({
+    user: { client_user_id: storedItem?.itemId || `user-${Date.now()}` },
+    client_name: "Claude Plaid Integration",
+    language: "en",
+    country_codes: [CountryCode.Us],
+    access_token: accessToken,
+    update: {
+      account_selection_enabled: true,
+    },
+  });
+  return response.data.link_token;
+}
+
 async function exchangePublicToken(
   publicToken: string,
   institutionName: string
@@ -361,6 +384,41 @@ app.post("/api/create_link_token", async (req, res) => {
       link_token: linkToken,
       message: "Use this link token to complete account linking in Plaid Link UI",
     });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    res.status(500).json({ success: false, error: errorMsg });
+  }
+});
+
+app.post("/api/create_link_token_for_update/:itemId", async (req, res) => {
+  try {
+    const linkToken = await createLinkTokenForUpdate(req.params.itemId);
+    res.json({
+      success: true,
+      link_token: linkToken,
+      message: "Use this link token to update account credentials in Plaid Link UI",
+    });
+  } catch (error: any) {
+    const errorCode = error.response?.data?.error_code;
+    const errorMsg = error.response?.data?.error_message || error.message || String(error);
+    console.error("Update link token error:", error.response?.data || error.message);
+    res.status(500).json({ success: false, error: errorMsg, error_code: errorCode });
+  }
+});
+
+app.delete("/api/items/:itemId", async (req, res) => {
+  try {
+    const tokens = loadTokens();
+    const itemId = req.params.itemId;
+
+    if (!tokens[itemId]) {
+      return res.status(404).json({ success: false, error: "Item not found" });
+    }
+
+    delete tokens[itemId];
+    saveTokens(tokens);
+
+    res.json({ success: true, message: "Item removed from local storage" });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     res.status(500).json({ success: false, error: errorMsg });
