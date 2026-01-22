@@ -114,6 +114,7 @@ async function createLinkToken(): Promise<string> {
     client_name: "Claude Plaid Integration",
     language: "en",
     products: [Products.Transactions],
+    optional_products: [Products.Investments],
     country_codes: [CountryCode.Us],
   });
   return response.data.link_token;
