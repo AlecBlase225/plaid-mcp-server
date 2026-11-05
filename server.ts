@@ -53,6 +53,26 @@ const plaidConfig = new Configuration({
 });
 
 const plaidClient = new PlaidApi(plaidConfig);
+// Function to get the dynamic date window
+function getPaycheckDateWindow() {
+  const endDateObj = new Date();
+  
+  // Example: For a standard bi-weekly pay cycle (14 days back)
+  const startDateObj = new Date();
+  startDateObj.setDate(endDateObj.getDate() - 14); 
+
+  // Format dates to YYYY-MM-DD required by Plaid API
+  const formatDate = (date) => date.toISOString().split('T')[0];
+
+  return {
+    start_date: formatDate(startDateObj),
+    end_date: formatDate(endDateObj)
+  };
+}
+
+// Usage in your Plaid transaction request:
+const dateWindow = getPaycheckDateWindow();
+console.log(`Fetching transactions from ${dateWindow.start_date} to ${dateWindow.end_date}`);
 
 // Token storage functions
 function loadTokens(): TokenStorage {
@@ -168,13 +188,17 @@ async function getTransactions(
 ): Promise<object> {
   const accessToken = getToken(itemId);
   if (!accessToken) {
-    throw new Error(`No access token found for item ${itemId}`);
+    throw new Error('No access token found for item');
   }
+
+  const dateWindow = getPaycheckDateWindow();
+  const targetStartDate = startDate || dateWindow.start_date;
+  const targetEndDate = endDate || dateWindow.end_date;
 
   const response = await plaidClient.transactionsGet({
     access_token: accessToken,
-    start_date: startDate,
-    end_date: endDate,
+    start_date: targetStartDate,
+    end_date: targetEndDate,
     options: {
       count: limit || 100,
       account_ids: accountIds,
